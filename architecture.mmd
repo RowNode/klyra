@@ -1,0 +1,41 @@
+graph LR
+  subgraph Frontend
+    A["Next.js 16 App<br/>App Router · TanStack Query · Wagmi"]
+    W["Wagmi + RainbowKit<br/>Mantle Sepolia (chain 5003)"]
+    C["Client Cache<br/>localStorage / cookies"]
+  end
+
+  subgraph Backend
+    B["Next.js API Routes<br/>/api/ai, /api/quests, /api/quests/[id]/submit-proof"]
+    S["Supabase Postgres<br/>quests, submissions, stats, leaderboard"]
+    J["Vercel Cron Jobs<br/>Groq, Pinata, daily/weekly quests"]
+  end
+
+  subgraph Mantle Sepolia
+    M["Mantle RPC<br/>tx verification"]
+    QM["QuestManager.sol<br/>ERC-8004 orchestrator"]
+    RV["RewardVault.sol<br/>KLYRA ERC-20"]
+    BN["BadgeNFT.sol<br/>ERC-721 rewards"]
+    REG["ERC-8004 Registries<br/>Agent, Reputation, Validation, Identity"]
+  end
+
+  subgraph DeFi Protocol
+    AGNI["Agni DEX<br/>Swap Protocol"]
+  end
+
+  W -->|sign tx| QM
+  A -->|REST quests/stats| B
+  B -->|responses| A
+  B -->|metadata + XP| S
+  S -->|leaderboard + quests| A
+  C --> A
+
+  J -->|quest drafts + Pinata uploads| B
+  J -->|daily/weekly quests| S
+
+  B -->|verify tx hash| M
+  B -->|recordCompletion oracle| QM
+  QM -->|release KLYRA| RV
+  QM -->|mint badge| BN
+  QM -->|submit reputation| REG
+  A -->|user swaps| AGNI
