@@ -293,9 +293,7 @@ npm run dev
 ## 👥 Team
 | Member | Role | Contact |
 | --- | --- | --- |
-| _Team Member 1_ | Smart Contracts & Backend | [LinkedIn](https://linkedin.com) [Twitter/X](https://x.com) |
-| _Team Member 2_ | Frontend & UX | [LinkedIn](https://linkedin.com) [Twitter/X](https://x.com) |
-
+| _Pradipa Naqa_ | FullStack | [Telegram](https://t.me/prapnaqa)
 ---
 
 ## 🤝 License
@@ -304,7 +302,6 @@ Copyright Klyra Quest team. All rights reserved.
 ---
 
 ## 📮 Contact
-- [Twitter/X](https://x.com/klyraquest)
-- [GitHub](https://github.com/klyraquest)
-- [Website](https://klyra.quest)
+- [GitHub](https://github.com/RowNode/klyra)
+- [Website](https://klyra-theta.vercel.app/)
     

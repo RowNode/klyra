@@ -44,7 +44,7 @@ export function NavUser() {
   const { disconnect } = useDisconnect();
   const [isLoading, setIsLoading] = useState(true);
   const [userName, setUserName] = useState("User");
-  const [avatar, setAvatar] = useState("https://github.com/shadcn.png");
+  const [avatar, setAvatar] = useState("https://github.com/evilrabbit.png");
   const [copied, setCopied] = useState(false);
 
   // Read KLYRA token balance
@@ -123,7 +123,7 @@ export function NavUser() {
 
       if (!KLYRA_TOKEN_ADDRESS) {
         toast.error(
-          "KLYRA token address belum dikonfigurasi (NEXT_PUBLIC_KLYRA_TOKEN_ADDRESS)."
+          "KLYRA Address Not In Config"
         );
         return;
       }
@@ -148,12 +148,12 @@ export function NavUser() {
         }, 1000);
       } else {
         toast.message(
-          "Permintaan penambahan Klyra token dibatalkan dari wallet."
+          "User Cancel."
         );
       }
     } catch (error) {
       console.error("Failed to add Klyra token to wallet:", error);
-      toast.error("Gagal menambahkan Klyra token ke wallet.");
+      toast.error("Failed to add Klyra token to wallet.");
     }
   };
 
@@ -161,16 +161,16 @@ export function NavUser() {
     try {
       if (!BADGE_NFT_ADDRESS) {
         toast.error(
-          "Badge NFT address belum dikonfigurasi (NEXT_PUBLIC_BADGE_NFT_ADDRESS)."
+          "Badge NFT address Not Configured."
         );
         return;
       }
 
       await navigator.clipboard.writeText(BADGE_NFT_ADDRESS);
-      toast.success("Badge NFT address berhasil disalin.");
+      toast.success("Badge NFT address Copied.");
     } catch (error) {
       console.error("Failed to copy badge NFT address:", error);
-      toast.error("Gagal menyalin Badge NFT address.");
+      toast.error("Failed to copy badge NFT address.");
     }
   };
 

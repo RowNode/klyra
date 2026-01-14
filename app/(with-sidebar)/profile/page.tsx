@@ -107,7 +107,7 @@ export default function ProfilePage() {
 
   const walletAddress = address || profile.wallet_address;
   const username = profile.name || `User ${walletAddress.slice(0, 6)}`;
-  const avatar = "https://github.com/shadcn.png";
+  const avatar = "https://github.com/evilrabbit.png";
   const email = profile.email || "No email provided";
 
   return (

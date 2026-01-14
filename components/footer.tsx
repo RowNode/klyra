@@ -52,15 +52,15 @@ export default function Footer() {
           </p>
           <div className="flex gap-6">
             {[
-              {
-                id: 1,
-                name: "Twitter",
-                url: "https://x.com/",
-              },
+              // {
+              //   id: 1,
+              //   name: "Twitter",
+              //   url: "https://x.com/",
+              // },
               {
                 id: 2,
                 name: "GitHub",
-                url: "https://github.com/",
+                url: "https://github.com/RowNode/klyra",
               },
             ].map((social) => (
               <Link

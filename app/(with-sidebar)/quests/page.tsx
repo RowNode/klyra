@@ -1,35 +1,19 @@
 "use client";
 
-import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Quest } from "@/lib/mock-data";
 import { transformQuest } from "@/lib/utils/quest-transform";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
-import { Search, X } from "lucide-react";
 
 export default function QuestsPage() {
   const { address } = useAccount();
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [quests, setQuests] = useState<Quest[]>([]);
+  const [activeQuests, setActiveQuests] = useState<Quest[]>([]);
+  const [completedQuests, setCompletedQuests] = useState<Quest[]>([]);
+  const [allFilter, setAllFilter] = useState<"all" | "active" | "completed" | "failed">("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const types = ["all", "Completed", "In Progress", "Not Started", "Expired"];
-  const categories = [
-    "all",
-    "Trading",
-    "Lending",
-    "Community",
-    "NFT",
-    "Governance",
-    "DeFi",
-    "Staking",
-  ];
 
   useEffect(() => {
     async function fetchQuests() {
@@ -37,16 +21,30 @@ export default function QuestsPage() {
         setLoading(true);
         setError(null);
         const params = address ? `?participant=${address}` : "";
-        const response = await fetch(`/api/quests${params}`);
+        const [activeRes, historyRes] = await Promise.all([
+          fetch(`/api/quests${params}`),
+          address
+            ? fetch(`/api/quests/users/${address}/history`)
+            : Promise.resolve(null),
+        ]);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch quests");
+        if (!activeRes.ok) {
+          throw new Error("Failed to fetch active quests");
         }
 
-        const data = await response.json();
-        const transformedQuests = (data.quests || []).map(transformQuest);
-        console.log("transformedQuests", transformedQuests);
-        setQuests(transformedQuests);
+        const activeData = await activeRes.json();
+        const transformedActive = (activeData.quests || []).map(transformQuest);
+        setActiveQuests(transformedActive);
+
+        if (historyRes && historyRes.ok) {
+          const historyData = await historyRes.json();
+          const transformedHistory = (historyData.quests || []).map(
+            transformQuest
+          );
+          setCompletedQuests(transformedHistory);
+        } else {
+          setCompletedQuests([]);
+        }
       } catch (err: any) {
         console.error("Error fetching quests:", err);
         setError(err.message || "Failed to load quests");
@@ -58,29 +56,43 @@ export default function QuestsPage() {
     fetchQuests();
   }, [address]);
 
-  const filteredQuests = quests.filter((quest) => {
-    const typeMatch =
-      selectedType === "all" ||
-      (selectedType === "Completed" && quest.status === "completed") ||
-      (selectedType === "In Progress" &&
-        quest.status === "active" &&
-        quest.progress > 0 &&
-        quest.progress < 100) ||
-      (selectedType === "Not Started" &&
-        quest.status === "active" &&
-        quest.progress === 0) ||
-      (selectedType === "Expired" && quest.status === "locked");
-    const categoryMatch =
-      selectedCategory === "all" || quest.category === selectedCategory;
+  // All quests (active + history) for the second section, de-duplicated by id
+  const allQuests: Quest[] = (() => {
+    const map = new Map<string | number, Quest>();
 
-    // Search filter - matches title, description, or category
-    const searchMatch =
-      searchQuery === "" ||
-      quest.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      quest.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      quest.category.toLowerCase().includes(searchQuery.toLowerCase());
+    // Prioritize history (completed/failed) version if it exists
+    completedQuests.forEach((q) => {
+      map.set(q.id, q);
+    });
 
-    return typeMatch && categoryMatch && searchMatch;
+    // Add active quests only if not already in history
+    activeQuests.forEach((q) => {
+      if (!map.has(q.id)) {
+        map.set(q.id, q);
+      }
+    });
+
+    return Array.from(map.values());
+  })();
+
+  const filteredAllQuests = allQuests.filter((quest) => {
+    const status = String(quest.status);
+
+    if (allFilter === "active") {
+      return status === "active";
+    }
+    if (allFilter === "completed") {
+      return status === "completed";
+    }
+    if (allFilter === "failed") {
+      // Treat expired / locked / cancelled as failed
+      return (
+        status === "locked" ||
+        status === "expired" ||
+        status === "cancelled"
+      );
+    }
+    return true; // "all"
   });
 
   if (loading) {
@@ -127,44 +139,29 @@ export default function QuestsPage() {
       {/* Header */}
       <div className="mb-12">
         <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-2">
-          Available Quests
+          Active Quests
         </h1>
         <p className="text-lg text-muted-foreground">
-          Complete quests to earn rewards and XP
+          These quests are currently live and can be completed for rewards.
         </p>
       </div>
 
+      {/* Active quests */}
       <div className="flex flex-col gap-6 mb-12">
         <h3 className="text-2xl md:text-3xl font-bold text-foreground">
-          Your Quests
+          Your Active Quests
         </h3>
-
-        {/* Search Bar */}
-        <div className="relative">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search quests..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10 bg-background w-[300px]"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Clear search"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </div>
 
         {/* Quests Grid */}
         <div className="grid md:grid-cols-2 gap-6">
-          {filteredQuests.map((quest) => (
+          {activeQuests.length === 0 && (
+            <div className="col-span-2 text-sm text-muted-foreground">
+              You don't have any active quests right now. Check back later or wait
+              for new daily/weekly quests.
+            </div>
+          )}
+
+          {activeQuests.map((quest) => (
             <Link key={quest.id} href={`/quests/${quest.id}`}>
               <div className="group p-6 border border-border bg-card hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer h-full flex flex-col rounded-none shadow-md">
                 {/* Header */}
@@ -238,74 +235,52 @@ export default function QuestsPage() {
         </div>
       </div>
 
-      {filteredQuests.length === 0 && (
-        <div className="text-center py-20">
-          <p className="text-lg text-muted-foreground">
-            {searchQuery
-              ? `No quests found matching "${searchQuery}".`
-              : "No quests found for your filters."}
-          </p>
-          {searchQuery && (
-            <Button
-              onClick={() => setSearchQuery("")}
-              variant="outline"
-              className="mt-4"
-            >
-              Clear Search
-            </Button>
-          )}
-        </div>
-      )}
-
-      {/* <div className="flex flex-col gap-6">
+      {/* All quests + filters */}
+      <div className="flex flex-col gap-6">
         <h3 className="text-2xl md:text-3xl font-bold text-foreground">
-          My Quests
+          All Quests
         </h3>
 
-        <div className="relative">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search quests by title, description, or category..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10 bg-background"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Clear search"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div>
-            <h3 className="font-semibold text-foreground mb-3">
-              Quest Conditions
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {types.map((type) => (
-                <Button
-                  key={type}
-                  onClick={() => setSelectedType(type)}
-                  variant={selectedType === type ? "default" : "outline"}
-                  className="capitalize"
-                >
-                  {type}
-                </Button>
-              ))}
-            </div>
-          </div>
+        {/* Filter buttons */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant={allFilter === "all" ? "default" : "outline"}
+            onClick={() => setAllFilter("all")}
+          >
+            All
+          </Button>
+          <Button
+            size="sm"
+            variant={allFilter === "active" ? "default" : "outline"}
+            onClick={() => setAllFilter("active")}
+          >
+            Active
+          </Button>
+          <Button
+            size="sm"
+            variant={allFilter === "completed" ? "default" : "outline"}
+            onClick={() => setAllFilter("completed")}
+          >
+            Completed
+          </Button>
+          <Button
+            size="sm"
+            variant={allFilter === "failed" ? "default" : "outline"}
+            onClick={() => setAllFilter("failed")}
+          >
+            Failed
+          </Button>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {filteredQuests.map((quest) => (
+          {filteredAllQuests.length === 0 && (
+            <div className="col-span-2 text-sm text-muted-foreground">
+              No quests found for this filter yet.
+            </div>
+          )}
+
+          {filteredAllQuests.map((quest) => (
             <Link key={quest.id} href={`/quests/${quest.id}`}>
               <div className="group p-6 border border-border bg-card hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer h-full flex flex-col rounded-none shadow-md">
                 <div className="flex items-start justify-between mb-4">
@@ -342,26 +317,12 @@ export default function QuestsPage() {
                   </span>
                 </div>
 
-                {quest.status === "active" && (
-                  <div className="mb-4">
-                    <div className="w-full bg-border rounded-full h-2">
-                      <div
-                        className="bg-linear-to-r from-primary to-secondary h-2 rounded-full transition-all"
-                        style={{ width: `${quest.progress}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {quest.progress}% progress
-                    </p>
-                  </div>
-                )}
-
                 <div className="flex items-center justify-between pt-4 border-t border-border">
                   <span className="text-sm font-semibold">
                     {quest.status === "completed"
                       ? "✓ Completed"
                       : quest.status === "locked"
-                      ? "🔒 Locked"
+                      ? "Failed"
                       : quest.deadline || "Active"}
                   </span>
                 </div>
@@ -370,25 +331,6 @@ export default function QuestsPage() {
           ))}
         </div>
       </div>
-
-      {filteredQuests.length === 0 && (
-        <div className="text-center py-20">
-          <p className="text-lg text-muted-foreground">
-            {searchQuery
-              ? `No quests found matching "${searchQuery}".`
-              : "No quests found for your filters."}
-          </p>
-          {searchQuery && (
-            <Button
-              onClick={() => setSearchQuery("")}
-              variant="outline"
-              className="mt-4"
-            >
-              Clear Search
-            </Button>
-          )}
-        </div>
-      )} */}
     </div>
   );
 }
