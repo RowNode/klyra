@@ -1,7 +1,7 @@
 // Client-side contract configuration
 // This file can be imported in client components without accessing server-side env vars
 
-import QuestManagerArtifact from "@/contracts/out/QuestManager.sol/QuestManager.json"
+import QuestManagerArtifact from "../lib/abis/QuestManager.json"
 
 export const questManagerAbi = QuestManagerArtifact.abi
 

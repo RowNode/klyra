@@ -1,7 +1,7 @@
 import { Abi, createPublicClient, createWalletClient, defineChain, http } from "viem"
 import { privateKeyToAccount } from "viem/accounts"
 
-import QuestManagerArtifact from "@/contracts/out/QuestManager.sol/QuestManager.json"
+import QuestManagerArtifact from "../abis/QuestManager.json"
 import { env } from "@/lib/config/env"
 
 export const mantleSepoliaTestnet = defineChain({
