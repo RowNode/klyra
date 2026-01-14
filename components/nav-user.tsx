@@ -19,8 +19,23 @@ import { EllipsisVertical, LogOut, Copy, Check, Coins } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount, useDisconnect, useReadContract } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { getAddress } from "viem";
+
+const KLYRA_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_KLYRA_TOKEN_ADDRESS;
+const BADGE_NFT_ADDRESS = process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS;
+
+// Standard ERC20 ABI for balanceOf
+const ERC20_ABI = [
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "balanceOf",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;
 
 export function NavUser() {
   const { isMobile } = useSidebar();
@@ -31,6 +46,18 @@ export function NavUser() {
   const [userName, setUserName] = useState("User");
   const [avatar, setAvatar] = useState("https://github.com/shadcn.png");
   const [copied, setCopied] = useState(false);
+
+  // Read KLYRA token balance
+  const { data: klyraBalance, refetch: refetchKlyraBalance } = useReadContract({
+    address: KLYRA_TOKEN_ADDRESS as `0x${string}` | undefined,
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: address ? [getAddress(address)] : undefined,
+    query: {
+      enabled: !!address && !!KLYRA_TOKEN_ADDRESS,
+      refetchInterval: 10000, // Refetch every 10 seconds
+    },
+  });
 
   // Format wallet address to show first 6 and last 4 characters
   const formatAddress = (addr: string | undefined) => {
@@ -81,6 +108,69 @@ export function NavUser() {
       setCopied(true);
       toast.success("Address copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleAddKlyraToken = async () => {
+    try {
+      if (typeof window === "undefined") return;
+
+      const provider = (window as any).ethereum;
+      if (!provider) {
+        toast.error("Ethereum wallet tidak ditemukan di browser.");
+        return;
+      }
+
+      if (!KLYRA_TOKEN_ADDRESS) {
+        toast.error(
+          "KLYRA token address belum dikonfigurasi (NEXT_PUBLIC_KLYRA_TOKEN_ADDRESS)."
+        );
+        return;
+      }
+
+      const wasAdded = await provider.request({
+        method: "wallet_watchAsset",
+        params: {
+          type: "ERC20",
+          options: {
+            address: KLYRA_TOKEN_ADDRESS,
+            symbol: "KLYRA",
+            decimals: 18,
+          },
+        },
+      });
+
+      if (wasAdded) {
+        toast.success("Klyra token berhasil ditambahkan ke wallet.");
+        // Refetch balance after adding token
+        setTimeout(() => {
+          refetchKlyraBalance();
+        }, 1000);
+      } else {
+        toast.message(
+          "Permintaan penambahan Klyra token dibatalkan dari wallet."
+        );
+      }
+    } catch (error) {
+      console.error("Failed to add Klyra token to wallet:", error);
+      toast.error("Gagal menambahkan Klyra token ke wallet.");
+    }
+  };
+
+  const handleCopyBadgeNftAddress = async () => {
+    try {
+      if (!BADGE_NFT_ADDRESS) {
+        toast.error(
+          "Badge NFT address belum dikonfigurasi (NEXT_PUBLIC_BADGE_NFT_ADDRESS)."
+        );
+        return;
+      }
+
+      await navigator.clipboard.writeText(BADGE_NFT_ADDRESS);
+      toast.success("Badge NFT address berhasil disalin.");
+    } catch (error) {
+      console.error("Failed to copy badge NFT address:", error);
+      toast.error("Gagal menyalin Badge NFT address.");
     }
   };
 
@@ -163,7 +253,11 @@ export function NavUser() {
                     Klyra Balance
                   </span>
                   <span className="text-xs font-mono text-foreground">
-                    {formatMNT(BigInt(1000000))} Klyra
+                    {!KLYRA_TOKEN_ADDRESS
+                      ? "N/A"
+                      : klyraBalance !== undefined
+                      ? `${formatMNT(klyraBalance)} Klyra`
+                      : "Loading..."}
                   </span>
                 </div>
               </div>
@@ -174,11 +268,23 @@ export function NavUser() {
                 Add to Wallet
               </DropdownMenuLabel>
 
-              <DropdownMenuItem className="group">
+              <DropdownMenuItem
+                className="group"
+                onSelect={(event) => {
+                  event.preventDefault();
+                  handleAddKlyraToken();
+                }}
+              >
                 <Coins className="mr-2 size-4 group-hover:text-white" />
                 Add Klyra Token
               </DropdownMenuItem>
-              <DropdownMenuItem className="group">
+              <DropdownMenuItem
+                className="group"
+                onSelect={(event) => {
+                  event.preventDefault();
+                  handleCopyBadgeNftAddress();
+                }}
+              >
                 <Copy className="mr-2 size-4 group-hover:text-white" />
                 Copy Badge NFT Address
               </DropdownMenuItem>
