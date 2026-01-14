@@ -1,0 +1,97 @@
+{
+    "@context": [
+      "https://schema.org",
+      "https://w3id.org/security/v3-unstable"
+    ],
+    "@type": "SoftwareApplication",
+    "@id": "urn:mantle:agent:questmaster-ai",
+    "name": "QuestMaster AI",
+    "alternateName": "Klyra QuestMaster",
+    "description": "AI agent that curates and issues DeFi quests in the Mantle ecosystem. This agent is responsible for creating engaging quests for users to participate in DeFi activities such as swaps, providing liquidity, staking, and lending.",
+    "applicationCategory": "DeFi",
+    "applicationSubCategory": "Gamification",
+    "operatingSystem": "Mantle Network",
+    "softwareVersion": "1.0.0",
+    "datePublished": "2025-01-27",
+    "provider": {
+      "@type": "Organization",
+      "name": "Klyra",
+      "url": "https://Klyra.help"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "MNT"
+    },
+    "capabilities": [
+      {
+        "@type": "Capability",
+        "name": "QuestCreation",
+        "description": "Create DeFi quests with various categories (Swap, Liquidity, Stake, Lend)"
+      },
+      {
+        "@type": "Capability",
+        "name": "QuestCurating",
+        "description": "Select and curate engaging quests that align with market conditions"
+      },
+      {
+        "@type": "Capability",
+        "name": "DeFiProtocolIntegration",
+        "description": "Integration with DeFi protocols on Mantle such as Uniswap, Aave, etc."
+      },
+      {
+        "@type": "Capability",
+        "name": "RewardManagement",
+        "description": "Manage distribution of klyra token rewards and NFT badges"
+      }
+    ],
+    "featureList": [
+      "Swap Quest Creation",
+      "Liquidity Quest Creation",
+      "Staking Quest Creation",
+      "Lending Quest Creation",
+      "Quest Parameter Optimization",
+      "Reward Calculation",
+      "User Progress Tracking"
+    ],
+    "keywords": [
+      "DeFi",
+      "Gamification",
+      "Quest System",
+      "Mantle",
+      "Token Rewards",
+      "NFT Badges",
+      "ERC-8004"
+    ],
+    "about": {
+      "@type": "Thing",
+      "name": "Klyra DeFi Quest Platform",
+      "description": "Gamification platform for DeFi activities in the Mantle ecosystem"
+    },
+    "audience": {
+      "@type": "Audience",
+      "audienceType": "DeFi Users",
+      "geographicArea": {
+        "@type": "Place",
+        "name": "Global"
+      }
+    },
+    "permissions": {
+      "@type": "DigitalDocumentPermission",
+      "permissionType": "ReadWrite",
+      "grantee": {
+        "@type": "Organization",
+        "name": "QuestManager Contract"
+      }
+    },
+    "endpoint": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://api.klyra.help/agent",
+      "actionPlatform": [
+        "https://mantle.xyz"
+      ],
+      "httpMethod": "POST",
+      "contentType": "application/json"
+    }
+  }
+  

@@ -1,0 +1,71 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+*.log
+*.Zone.Identifier
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Foundry / Smart Contracts
+# Lib folder contents will be committed (not using git submodules)
+/contracts/cache/
+/contracts/broadcast/*/31337/
+/contracts/broadcast/**/dry-run/
+/contracts/.env
+/contracts/.env.local
+
+# Keep broadcast for deployment logs (but ignore local dev chains)
+# Mantle Sepolia (chain 5003) deployment logs are kept
+!/contracts/broadcast
+!/contracts/broadcast/**/5003/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+.DS_Store
